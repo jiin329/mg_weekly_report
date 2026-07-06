@@ -162,7 +162,7 @@ flowchart LR
 - **MessageService**: 메시지 저장(시간순), 조회, 빈 메시지 방어.
 - **ReportService**: 메시지 취합 → Report_Template 프롬프트 구성 → LLM 호출 → 응답을 Weekly_Report 구조로 파싱.
 - **LLMClient**: 환경 변수(API Key/Endpoint) 기반 LLM API 연동. 타임아웃/오류 처리.
-- **Repository**: 로컬 영속 저장소 접근 계층(방/메시지/보고서). 인메모리는 부적합 — 재시작 간 데이터 유지 및 Phase 2 설정 영속성(11.8) 필요.
+- **Repository**: 로컬 영속 저장소 접근 계층(방/메시지/보고서). 인메모리는 부적합 — 재시작 간 데이터 유지 및 Phase 2 설정 영속성(11.8) 필요. **구현: Python 표준 라이브러리 `sqlite3` 기반 단일 파일 DB(추가 의존성 없음).** 보고서 생성(방 Closed 전환 + 신규 Active 방 생성)은 단일 트랜잭션으로 원자적으로 커밋하여 Property 9를 보장한다. DB 파일 경로는 `config`에 두며 Phase 1은 프로젝트 로컬, Phase 2는 사용자 데이터 경로(예: `%APPDATA%`)를 사용한다.
 - **Config**: 환경 변수 로딩 및 검증. 누락 항목을 이름으로 식별.
 
 ### REST API 인터페이스
