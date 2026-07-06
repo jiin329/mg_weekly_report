@@ -1,0 +1,321 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Chat_UI snapshots > ConnectionErrorBanner — backend unreachable (Req 10.9) 1`] = `
+<div>
+  <div
+    class="connection-error-banner"
+    role="alert"
+  >
+    백엔드 연결을 사용할 수 없습니다.
+  </div>
+</div>
+`;
+
+exports[`Chat_UI snapshots > InputArea — active vs closed/disabled (Req 2.4, 6.2) > active 1`] = `
+<div>
+  <div
+    class="input-area"
+  >
+    <textarea
+      aria-label="메시지 입력"
+      class="input-area__field"
+      rows="2"
+    />
+    <button
+      class="input-area__send"
+      type="button"
+    >
+      전송
+    </button>
+  </div>
+</div>
+`;
+
+exports[`Chat_UI snapshots > InputArea — active vs closed/disabled (Req 2.4, 6.2) > disabled 1`] = `
+<div>
+  <div
+    class="input-area"
+  >
+    <textarea
+      aria-label="메시지 입력"
+      class="input-area__field"
+      disabled=""
+      rows="2"
+    />
+    <button
+      class="input-area__send"
+      disabled=""
+      type="button"
+    >
+      전송
+    </button>
+  </div>
+</div>
+`;
+
+exports[`Chat_UI snapshots > LoadingIndicator — report generation wait (Req 4.4) 1`] = `
+<div>
+  <div
+    aria-live="polite"
+    class="loading-indicator"
+    role="status"
+  >
+    <span
+      aria-hidden="true"
+      class="loading-indicator__spinner"
+    />
+    <span
+      class="loading-indicator__label"
+    >
+      주간보고를 생성하고 있습니다...
+    </span>
+  </div>
+</div>
+`;
+
+exports[`Chat_UI snapshots > MessageBubble — user vs system alignment/color (Req 2.1, 2.2) 1`] = `
+<div>
+  <div
+    class="bubble-row bubble-row--user"
+  >
+    <div
+      class="bubble bubble--user"
+    >
+      <p
+        class="bubble__content"
+      >
+        이번 주 결제 모듈 리팩터링을 완료했습니다.
+      </p>
+      <time
+        class="bubble__time"
+        datetime="2024-06-03T09:30:00.000Z"
+      >
+        2024. 06. 03. PM 06:30
+      </time>
+    </div>
+  </div>
+  <div
+    class="bubble-row bubble-row--system"
+  >
+    <div
+      class="bubble bubble--system"
+    >
+      <p
+        class="bubble__content"
+      >
+        생성된 주간보고입니다.
+      </p>
+      <time
+        class="bubble__time"
+        datetime="2024-06-03T09:30:00.000Z"
+      >
+        2024. 06. 03. PM 06:30
+      </time>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Chat_UI snapshots > MessageList — messages with the auto-scroll sentinel (Req 2.5) 1`] = `
+<div>
+  <div
+    class="message-list"
+  >
+    <div
+      class="bubble-row bubble-row--user"
+    >
+      <div
+        class="bubble bubble--user"
+      >
+        <p
+          class="bubble__content"
+        >
+          첫 번째
+        </p>
+        <time
+          class="bubble__time"
+          datetime="2024-06-03T09:30:00.000Z"
+        >
+          2024. 06. 03. PM 06:30
+        </time>
+      </div>
+    </div>
+    <div
+      class="bubble-row bubble-row--user"
+    >
+      <div
+        class="bubble bubble--user"
+      >
+        <p
+          class="bubble__content"
+        >
+          두 번째
+        </p>
+        <time
+          class="bubble__time"
+          datetime="2024-06-03T09:30:00.000Z"
+        >
+          2024. 06. 03. PM 06:30
+        </time>
+      </div>
+    </div>
+    <div
+      data-testid="message-list-bottom"
+    />
+  </div>
+</div>
+`;
+
+exports[`Chat_UI snapshots > ReportCard — four sections and copy button (Req 5.4, 5.5) 1`] = `
+<div>
+  <section
+    aria-label="주간보고"
+    class="report-card"
+  >
+    <header
+      class="report-card__header"
+    >
+      <h2
+        class="report-card__title"
+      >
+        주간보고
+      </h2>
+      <button
+        class="report-card__copy"
+        type="button"
+      >
+        복사
+      </button>
+    </header>
+    <dl
+      class="report-card__sections"
+    >
+      <div
+        class="report-card__section"
+      >
+        <dt
+          class="report-card__label"
+        >
+          작성일
+        </dt>
+        <dd
+          class="report-card__value"
+        >
+          2025-06-13
+        </dd>
+      </div>
+      <div
+        class="report-card__section"
+      >
+        <dt
+          class="report-card__label"
+        >
+          금주 업무 실적
+        </dt>
+        <dd
+          class="report-card__value"
+        >
+          결제 모듈 리팩터링 완료
+        </dd>
+      </div>
+      <div
+        class="report-card__section"
+      >
+        <dt
+          class="report-card__label"
+        >
+          차주 업무 계획
+        </dt>
+        <dd
+          class="report-card__value"
+        >
+          알림 서비스 설계 착수
+        </dd>
+      </div>
+      <div
+        class="report-card__section"
+      >
+        <dt
+          class="report-card__label"
+        >
+          이슈 및 건의사항
+        </dt>
+        <dd
+          class="report-card__value"
+        >
+          테스트 환경 리소스 부족
+        </dd>
+      </div>
+    </dl>
+  </section>
+</div>
+`;
+
+exports[`Chat_UI snapshots > RoomList — active/closed distinction and selection (Req 7.1–7.4) 1`] = `
+<div>
+  <nav
+    aria-label="채팅방 목록"
+    class="room-list"
+  >
+    <ul
+      class="room-list__items"
+    >
+      <li>
+        <button
+          aria-current="true"
+          class="room room--active room--selected"
+          type="button"
+        >
+          <span
+            class="room__title"
+          >
+            주간보고
+          </span>
+          <span
+            class="room__date"
+          >
+            2024. 3. 11.
+          </span>
+          <span
+            class="room__status room__status--active"
+          >
+            진행 중
+          </span>
+          <span
+            class="room__id"
+          >
+            r-active
+          </span>
+        </button>
+      </li>
+      <li>
+        <button
+          class="room room--closed"
+          type="button"
+        >
+          <span
+            class="room__title"
+          >
+            주간보고
+          </span>
+          <span
+            class="room__date"
+          >
+            2024. 3. 4.
+          </span>
+          <span
+            class="room__status room__status--closed"
+          >
+            완료
+          </span>
+          <span
+            class="room__id"
+          >
+            r-closed
+          </span>
+        </button>
+      </li>
+    </ul>
+  </nav>
+</div>
+`;

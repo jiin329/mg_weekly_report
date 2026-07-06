@@ -1,0 +1,51 @@
+/* MessageBubble styling (Requirements 2.1–2.3).
+   User messages align right with a distinct background; system messages align
+   left with a different background. Colors come from the dark theme (index.css). */
+
+.bubble-row {
+  display: flex;
+  margin: 4px 0;
+}
+
+.bubble-row--user {
+  justify-content: flex-end;
+}
+
+.bubble-row--system {
+  justify-content: flex-start;
+}
+
+.bubble {
+  max-width: 70%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+/* Req 2.1: user bubble — distinct (accent) background, right side. */
+.bubble--user {
+  background-color: var(--accent);
+  color: var(--on-accent);
+  border-bottom-right-radius: 4px;
+}
+
+/* Req 2.2: system bubble — different (surface) background, left side. */
+.bubble--system {
+  background-color: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+
+.bubble__content {
+  margin: 0;
+}
+
+/* Req 2.3: timestamp shown with each message. */
+.bubble__time {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.7;
+}

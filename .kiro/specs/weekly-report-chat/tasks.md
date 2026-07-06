@@ -49,51 +49,51 @@
 - [x] 2. [SHARED] 체크포인트 — 계약 정합성 확인
   - 모든 테스트가 통과하는지 확인하고, 계약(타입/엔드포인트/오류/LLM 인터페이스)이 세 트랙에서 동일하게 참조 가능한지 검토한다. 의문점이 있으면 사용자에게 확인한다.
 
-- [ ] 3. [FE] Frontend 트랙 (mock 백엔드 대상 개발, BE 진행에 비의존)
-  - [ ] 3.1 [FE] apiClient 및 mock 백엔드 하네스 구현
+- [x] 3. [FE] Frontend 트랙 (mock 백엔드 대상 개발, BE 진행에 비의존)
+  - [x] 3.1 [FE] apiClient 및 mock 백엔드 하네스 구현
     - 확정된 REST 계약(1.3)에 대한 `apiClient` fetch 래퍼 구현, 구조화 오류 응답(1.4) 파싱
     - FE 단독 개발을 위한 mock 백엔드(고정/메모리 응답) 하네스 구성 — 실제 BE 없이 전체 UI 흐름 검증 가능
     - _Requirements: 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8_
     - _의존: 1.2, 1.3, 1.4 / BE·LLM 트랙에 비의존_
-  - [ ] 3.2 [FE] AppShell 레이아웃 및 창 리사이즈 대응 구현
+  - [x] 3.2 [FE] AppShell 레이아웃 및 창 리사이즈 대응 구현
     - 사이드바 + 메인 채팅 영역 레이아웃, Application_Window 리사이즈 시 레이아웃 적응
     - _Requirements: 2.6, 7_
     - _의존: 3.1_
-  - [ ] 3.3 [FE] RoomList 컴포넌트 구현
+  - [x] 3.3 [FE] RoomList 컴포넌트 구현
     - Active/Closed 채팅방 목록 표시 및 시각적 구분, 선택 시 방 전환, 기본으로 최신 Active 방 표시
     - 앱 로드 시 기존 Active 방과 그 이전 메시지를 표시(신규 첫 실행이 아닌 경우)
     - _Requirements: 1.4, 7.1, 7.2, 7.3, 7.4_
     - _의존: 3.1_
-  - [ ] 3.4 [FE] MessageList 컴포넌트 및 자동 스크롤 구현
+  - [x] 3.4 [FE] MessageList 컴포넌트 및 자동 스크롤 구현
     - 메시지 스크롤 영역, 신규 메시지 추가 시 최신 메시지로 자동 스크롤
     - _Requirements: 2.5_
     - _의존: 3.1_
-  - [ ] 3.5 [FE] MessageBubble 컴포넌트 구현
+  - [x] 3.5 [FE] MessageBubble 컴포넌트 구현
     - User 메시지(우측 정렬/구분 색상), 시스템 보고서 메시지(좌측 정렬/다른 색상), 각 메시지 타임스탬프 표시
     - _Requirements: 2.1, 2.2, 2.3_
     - _의존: 3.1_
-  - [ ] 3.6 [FE] InputArea 컴포넌트 구현
+  - [x] 3.6 [FE] InputArea 컴포넌트 구현
     - Application_Window 하단의 텍스트 입력 필드 + 전송 버튼, Enter 전송, 빈/공백 메시지 전송 차단(오류 미표시), Closed 방에서 입력·전송 비활성화
     - _Requirements: 2.4, 3.1, 3.2, 3.3, 6.2, 6.6_
     - _의존: 3.1_
-  - [ ] 3.7 [FE] GenerateButton 컴포넌트 구현
+  - [x] 3.7 [FE] GenerateButton 컴포넌트 구현
     - Active 방에서만 '주간보고 생성' 버튼 노출, 메시지 없으면 생성 차단 및 안내 표시, 클릭 시 보고서 생성 요청
     - _Requirements: 4.1, 4.2, 4.5_
     - _의존: 3.1_
-  - [ ] 3.8 [FE] ReportCard 및 LoadingIndicator 구현
+  - [x] 3.8 [FE] ReportCard 및 LoadingIndicator 구현
     - 생성된 Weekly_Report 4개 섹션 포맷 표시, 복사 버튼 및 복사 성공 알림, 생성 대기 중 로딩 인디케이터 표시
     - _Requirements: 4.4, 5.4, 5.5, 5.6_
     - _의존: 3.1_
-  - [ ] 3.9 [FE] ConnectionErrorBanner 구현
+  - [x] 3.9 [FE] ConnectionErrorBanner 구현
     - Backend 연결 불가 시 Application_Window 내 오류 배너 표시
     - _Requirements: 10.9, 11.6_
     - _의존: 3.1_
-  - [ ]* 3.10 [FE] MessageBubble 타임스탬프 렌더 속성 테스트
+  - [x] 3.10 [FE] MessageBubble 타임스탬프 렌더 속성 테스트
     - **Property 5: 렌더된 메시지는 항상 타임스탬프를 포함한다**
     - **Validates: Requirements 2.3**
     - fast-check + React Testing Library로 임의 유효 메시지에 대해 렌더 출력에 타임스탬프 포함 검증
     - _의존: 3.5_
-  - [ ]* 3.11 [FE] UI 예시/스냅샷 단위 테스트
+  - [x] 3.11 [FE] UI 예시/스냅샷 단위 테스트
     - 메시지 버블 정렬·색상(2.1, 2.2), 입력 영역(2.4), 자동 스크롤(2.5), 방 목록/구분/선택/기본표시(7.1–7.4), Closed 방 입력 비활성(6.2), 신규 방 노출(6.4), 읽기 전용 조회(6.5), 로딩 표시(4.4), 보고서 카드·복사(5.4–5.6), 연결 오류 배너(10.9)
     - _Requirements: 2.1, 2.2, 2.4, 2.5, 4.4, 5.4, 5.5, 5.6, 6.2, 6.4, 6.5, 7.1, 7.2, 7.3, 7.4, 10.9_
     - _의존: 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9_
