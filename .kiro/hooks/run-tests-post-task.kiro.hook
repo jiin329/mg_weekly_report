@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Run Tests After Task",
+  "description": "Spec 태스크 완료 후 모든 테스트를 실행하여 기존 기능이 깨지지 않았는지 확인합니다.",
+  "version": "1",
+  "when": {
+    "type": "postTaskExecution"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "태스크가 완료되었습니다. 다음을 확인하세요:\n1. 프로젝트의 모든 테스트를 실행하여 통과하는지 확인하세요.\n2. 컴파일러/린터 경고가 없는지 확인하세요.\n3. 테스트가 실패하면 즉시 수정하세요.\n4. 모든 테스트가 통과되어야만 이 태스크가 완료된 것으로 간주합니다."
+  }
+}

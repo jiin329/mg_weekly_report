@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "TDD Reminder Before Task",
+  "description": "Spec 태스크 실행 전에 TDD 주기(Red → Green → Refactor)를 따르도록 리마인드합니다. 실패하는 테스트를 먼저 작성하고, 최소한의 코드로 통과시킨 후 리팩터링하는 순서를 안내합니다.",
+  "version": "1",
+  "when": {
+    "type": "preTaskExecution"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "이 태스크를 시작하기 전에 TDD 주기를 따르세요:\n1. 먼저 이 태스크의 기능을 검증할 가장 간단한 실패하는 테스트를 작성하세요.\n2. 테스트가 실패하는지 확인하세요 (Red).\n3. 테스트를 통과시키는 최소한의 코드를 구현하세요 (Green).\n4. 테스트 통과 후 필요하면 리팩터링하세요 (Refactor).\n구조적 변경과 동작적 변경을 분리하여 진행하세요."
+  }
+}
