@@ -16,30 +16,30 @@
 
 ## Tasks
 
-- [ ] 1. [SHARED] 파운데이션 / 계약 확정
-  - [ ] 1.1 [SHARED] 저장소·프로젝트 스켈레톤 및 로컬 설정 구성
+- [x] 1. [SHARED] 파운데이션 / 계약 확정
+  - [x] 1.1 [SHARED] 저장소·프로젝트 스켈레톤 및 로컬 설정 구성
     - `frontend/`(React + TypeScript), `backend/`(Python + FastAPI) 폴더 구조와 데스크톱 셸 진입점(`app.py` 등) 스켈레톤 생성
     - 로컬 루프백 포트(`BACKEND_PORT` 기본값 포함) 및 `.env.example`(LLM_API_KEY, LLM_ENDPOINT, BACKEND_PORT) 합의·명시
     - FE/BE 각각의 빌드·테스트 도구(예: Vite/Vitest, pytest/Hypothesis) 초기 설정
     - _Requirements: 8.1, 9.5, 10.4, 10.5_
     - _블로킹: 이후 모든 작업의 선행 조건_
-  - [ ] 1.2 [SHARED] 공유 데이터 모델/타입 정의
+  - [x] 1.2 [SHARED] 공유 데이터 모델/타입 정의
     - TypeScript 타입(`ChatRoom`, `Message`, `WeeklyReport`, `ErrorResponse`, `AppConfig`)을 `frontend/`에 정의
     - Python 대응 모델(Pydantic 스키마)을 `backend/`에 정의하고 두 정의가 동일 계약을 표현하도록 정합성 확보
     - 데이터 모델 불변식(방 status↔report/closedAt 관계, active 방 최대 1개, user 메시지 공백 불가) 주석 명시
     - _Requirements: 1.3, 3.4, 5.2_
     - _블로킹: 1.3, 1.5 및 FE/BE 트랙_
-  - [ ] 1.3 [SHARED] REST API 계약 확정
+  - [x] 1.3 [SHARED] REST API 계약 확정
     - design.md의 엔드포인트 5종(`POST /rooms`, `GET /rooms`, `GET /rooms/{roomId}/messages`, `POST /rooms/{roomId}/messages`, `POST /rooms/{roomId}/report`)에 대한 요청/응답 형태를 계약 문서/타입으로 고정
     - 각 엔드포인트의 동작 규칙(Closed 방 메시지 거부, 메시지 없는 방 보고서 거부, 원자적 보고서 생성 흐름) 명시
     - _Requirements: 8.2, 8.3, 8.4, 8.5, 8.6, 3.1, 3.5, 4.2, 5.3, 6.1, 6.2, 6.3_
     - _블로킹: FE/BE 트랙_
-  - [ ] 1.4 [SHARED] 오류 코드 카탈로그 및 구조화 오류 형식 확정
+  - [x] 1.4 [SHARED] 오류 코드 카탈로그 및 구조화 오류 형식 확정
     - `ErrorResponse` 구조(`error.code`, `error.message`, `error.details?`) 및 코드 카탈로그(`ROOM_NOT_FOUND`, `ROOM_CLOSED`, `EMPTY_MESSAGE`, `NO_MESSAGES`, `LLM_UNAVAILABLE`, `LLM_TIMEOUT`, `CONFIG_MISSING`, `INTERNAL_ERROR`)를 공유 상수로 정의
     - HTTP 상태 코드 매핑 명시
     - _Requirements: 8.7, 8.8_
     - _블로킹: BE/FE 트랙(오류 파싱)_
-  - [ ] 1.5 [SHARED] LLM 모듈 인터페이스 경계 및 stub/mock 계약 정의
+  - [x] 1.5 [SHARED] LLM 모듈 인터페이스 경계 및 stub/mock 계약 정의
     - LLM 모듈 인터페이스(입력: user 메시지 목록 + Report_Template, 출력: 파싱된 `WeeklyReport`) 시그니처 확정 (예: `LLMClient.generate(messages, template) -> WeeklyReport`)
     - BE와 LLM 트랙이 공유할 stub/mock 클라이언트(고정 응답 반환) 구현 — BE는 이 stub로 개발, LLM 트랙은 실제 구현을 이 인터페이스에 맞춰 개발
     - 타임아웃/오류(`LLM_UNAVAILABLE`, `LLM_TIMEOUT`) 계약 명시

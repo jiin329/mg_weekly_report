@@ -1,0 +1,7 @@
+# Runtime dependencies for the weekly-report-chat backend.
+# For development/test tooling install with: pip install -e ".[dev]"
+# (or: pip install -r requirements-dev.txt)
+fastapi>=0.111
+uvicorn[standard]>=0.30
+pydantic>=2.7
+python-dotenv>=1.0
