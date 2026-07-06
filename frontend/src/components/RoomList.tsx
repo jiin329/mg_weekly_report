@@ -1,13 +1,5 @@
-import type { ChatRoom } from "../types";
+﻿import type { ChatRoom } from "../types";
 
-/**
- * RoomList is a presentational component that shows the chat rooms and lets the
- * user switch between them (Requirements 7.1–7.4).
- *
- * State (which room is selected, the room list itself) lives in the parent
- * (AppShell). This component only renders what it is given and reports clicks
- * back through `onSelectRoom`.
- */
 export interface RoomListProps {
   rooms: ChatRoom[];
   selectedRoomId: string | null;
@@ -19,8 +11,6 @@ function statusLabel(status: ChatRoom["status"]): string {
 }
 
 function formatCreatedAt(createdAt: string): string {
-  // Fall back to the raw value if it is not a parseable date, so the room is
-  // still identifiable rather than showing "Invalid Date".
   const date = new Date(createdAt);
   return Number.isNaN(date.getTime()) ? createdAt : date.toLocaleDateString();
 }
@@ -65,7 +55,6 @@ export function RoomList({
                 <span className={`room__status room__status--${room.status}`}>
                   {statusLabel(room.status)}
                 </span>
-                {/* Kept for accessibility / test lookup; hidden visually. */}
                 <span className="room__id">{room.id}</span>
               </button>
             </li>

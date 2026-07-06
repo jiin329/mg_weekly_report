@@ -1,20 +1,10 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import type { WeeklyReport } from "../types";
 
-/**
- * ReportCard renders a generated Weekly_Report in its four-section format and
- * provides a copy-to-clipboard action.
- *
- * Requirements:
- * - 5.4: display the four sections (작성일, 금주 업무 실적, 차주 업무 계획, 이슈 및 건의사항)
- * - 5.5: provide a copy button
- * - 5.6: copy the report text to the clipboard and show a success notification
- */
 export interface ReportCardProps {
   report: WeeklyReport;
 }
 
-// The four sections in display order, paired with their Korean labels.
 const SECTIONS: { label: string; key: keyof WeeklyReport }[] = [
   { label: "작성일", key: "writtenDate" },
   { label: "금주 업무 실적", key: "achievements" },
@@ -22,7 +12,6 @@ const SECTIONS: { label: string; key: keyof WeeklyReport }[] = [
   { label: "이슈 및 건의사항", key: "issues" },
 ];
 
-/** Builds the plain-text form of the report used for clipboard copy. */
 function formatReport(report: WeeklyReport): string {
   return SECTIONS.map(({ label, key }) => `[${label}]\n${report[key]}`).join(
     "\n\n",
@@ -37,8 +26,6 @@ export function ReportCard({ report }: ReportCardProps) {
       await navigator.clipboard.writeText(formatReport(report));
       setCopied(true);
     } catch {
-      // Clipboard access can fail (e.g. denied permission). Keep the UI usable;
-      // the user can still read and manually copy the report.
       setCopied(false);
     }
   }
@@ -46,7 +33,10 @@ export function ReportCard({ report }: ReportCardProps) {
   return (
     <section className="report-card" aria-label="주간보고">
       <header className="report-card__header">
-        <h2 className="report-card__title">주간보고</h2>
+        <div>
+          <p className="report-card__eyebrow">생성된 결과</p>
+          <h2 className="report-card__title">주간보고</h2>
+        </div>
         <button type="button" className="report-card__copy" onClick={handleCopy}>
           복사
         </button>

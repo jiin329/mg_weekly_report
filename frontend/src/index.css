@@ -1,44 +1,72 @@
-/*
- * Global theme for the weekly-report-chat UI.
- *
- * A single stylesheet (loaded once from main.tsx) that themes the whole app and
- * styles the components whose class hooks were not otherwise styled. Layout
- * lives in the co-located AppShell.css / MessageBubble.css; this file provides
- * the shared palette, typography, and the look of the remaining components.
- *
- * Palette: dark theme built from the provided accent colors
- * (purple / blue / orange / green / cyan / pink on a dark canvas).
- */
+﻿:root {
+  --blue: #7ab8f5;
+  --green: #76d99a;
+  --red: #f27f9a;
+  --amber: #f1b86b;
 
-:root {
-  /* Accent colors from the provided palette. */
-  --purple: #e2d3fe;
-  --blue: #8dc8fb;
-  --orange: #ffcf99;
-  --green: #80ffb5;
-  --cyan: #80f4ff;
-  --pink: #ff80b5;
+  --accent: #7ab8f5;
+  --accent-strong: #5da8ee;
 
-  /* Primary accent used for buttons / highlights. */
-  --accent: #8dc8fb;
-  --accent-strong: #6fb8f5;
+  --bg: #17191f;
+  --sidebar-bg: #1e2128;
+  --surface: #242832;
+  --surface-2: #2d3340;
+  --border: #3a4150;
 
-  /* Dark surfaces. */
-  --bg: #1b1b22;
-  --surface: #262630;
-  --surface-2: #2f2f3a;
-  --border: #3a3a46;
+  --text: #f4f6f8;
+  --text-muted: rgba(244, 246, 248, 0.62);
+  --on-accent: #10141a;
 
-  /* Text. */
-  --text: #f4f4f6;
-  --text-muted: rgba(255, 255, 255, 0.6);
-  --on-accent: #14141a;
+  --danger: #f27f9a;
+  --radius: 8px;
+  --shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
 
-  --danger: #ff80b5;
-  --radius: 12px;
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --room-selected-bg: rgba(122, 184, 245, 0.14);
+  --status-active-bg: rgba(118, 217, 154, 0.14);
+  --status-closed-bg: rgba(244, 246, 248, 0.08);
+  --input-disabled-bg: #20242c;
+  --btn-disabled-bg: #353b47;
+  --error-banner-bg: rgba(242, 127, 154, 0.14);
+  --error-banner-border: rgba(242, 127, 154, 0.35);
+  --generate-btn-bg: #7ab8f5;
+  --generate-btn-text: #10141a;
+  --surface-hover: #343b49;
+
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic",
     "Apple SD Gothic Neo", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+[data-theme="light"] {
+  --bg: #eef2f6;
+  --sidebar-bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --border: #d9e1ea;
+
+  --text: #17202a;
+  --text-muted: rgba(23, 32, 42, 0.56);
+  --on-accent: #ffffff;
+
+  --accent: #2f6fed;
+  --accent-strong: #245ed0;
+  --blue: #2f6fed;
+  --green: #178a4f;
+  --red: #c83f5f;
+  --amber: #a86416;
+  --danger: #c83f5f;
+
+  --shadow: 0 8px 20px rgba(24, 39, 75, 0.09);
+
+  --room-selected-bg: rgba(47, 111, 237, 0.1);
+  --status-active-bg: rgba(23, 138, 79, 0.1);
+  --status-closed-bg: rgba(23, 32, 42, 0.06);
+  --input-disabled-bg: #e9eef4;
+  --btn-disabled-bg: #d9e1ea;
+  --error-banner-bg: rgba(200, 63, 95, 0.08);
+  --error-banner-border: rgba(200, 63, 95, 0.22);
+  --generate-btn-bg: #2f6fed;
+  --generate-btn-text: #ffffff;
+  --surface-hover: #e8eef6;
 }
 
 * {
@@ -59,8 +87,12 @@ body {
   line-height: 1.5;
 }
 
-button {
+button,
+textarea {
   font-family: inherit;
+}
+
+button {
   cursor: pointer;
 }
 
@@ -68,7 +100,6 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* Visually hidden but available to assistive tech / accessible-name queries. */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -81,9 +112,8 @@ button:disabled {
   border: 0;
 }
 
-/* ---- RoomList (sidebar) --------------------------------------------------- */
-
-.room-list {
+.room-list,
+.room-list__items {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -93,9 +123,6 @@ button:disabled {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
 .room-list__empty {
@@ -105,18 +132,19 @@ button:disabled {
 }
 
 .room {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 3px 8px;
   width: 100%;
-  padding: 12px 14px;
+  min-height: 68px;
+  padding: 10px 12px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text);
   text-align: left;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  transition: background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
 }
 
 .room:hover {
@@ -125,43 +153,45 @@ button:disabled {
 
 .room--selected {
   border-color: var(--accent);
-  background: rgba(141, 200, 251, 0.12);
+  background: var(--room-selected-bg);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .room__title {
-  font-size: 15px;
-  font-weight: 600;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .room__date {
+  grid-column: 1;
   font-size: 12px;
   color: var(--text-muted);
 }
 
-/* The raw room id is kept for accessibility / tests but not shown visually. */
 .room__id {
   display: none;
 }
 
 .room__status {
-  margin-top: 2px;
+  grid-column: 2;
+  grid-row: 1 / span 2;
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .room__status--active {
-  background: rgba(128, 255, 181, 0.16);
+  background: var(--status-active-bg);
   color: var(--green);
 }
 
 .room__status--closed {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--status-closed-bg);
   color: var(--text-muted);
 }
-
-/* ---- InputArea ------------------------------------------------------------ */
 
 .input-area {
   display: flex;
@@ -175,6 +205,8 @@ button:disabled {
 .input-area__field {
   flex: 1 1 auto;
   resize: none;
+  min-height: 44px;
+  max-height: 160px;
   padding: 10px 12px;
   background: var(--bg);
   color: var(--text);
@@ -182,6 +214,7 @@ button:disabled {
   border-radius: var(--radius);
   font: inherit;
   font-size: 14px;
+  line-height: 1.45;
   outline: none;
 }
 
@@ -191,121 +224,138 @@ button:disabled {
 
 .input-area__field:focus {
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(122, 184, 245, 0.16);
 }
 
 .input-area__field:disabled {
-  background: #202027;
+  background: var(--input-disabled-bg);
   color: var(--text-muted);
 }
 
 .input-area__send {
   flex: 0 0 auto;
-  padding: 0 18px;
+  min-width: 72px;
   height: 44px;
+  padding: 0 18px;
   border: none;
   border-radius: var(--radius);
   background: var(--accent);
   color: var(--on-accent);
   font-size: 14px;
   font-weight: 700;
-  transition: background 0.12s ease;
+  transition: background 0.12s ease, transform 0.12s ease;
 }
 
 .input-area__send:hover:not(:disabled) {
   background: var(--accent-strong);
 }
 
+.input-area__send:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
 .input-area__send:disabled {
-  background: #33333d;
+  background: var(--btn-disabled-bg);
   color: var(--text-muted);
 }
 
-/* ---- GenerateButton ------------------------------------------------------- */
-
 .generate-button {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 8px 10px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
 }
 
 .generate-button button {
-  align-self: flex-start;
-  padding: 8px 16px;
+  padding: 8px 14px;
   border: none;
   border-radius: var(--radius);
-  background: var(--purple);
-  color: var(--on-accent);
+  background: var(--generate-btn-bg);
+  color: var(--generate-btn-text);
   font-size: 14px;
   font-weight: 700;
+  box-shadow: var(--shadow);
 }
 
 .generate-button button:hover {
-  filter: brightness(1.05);
+  background: var(--accent-strong);
 }
 
 .generate-button [role="alert"] {
   margin: 0;
   font-size: 13px;
-  color: var(--pink);
+  color: var(--danger);
 }
 
-/* ---- ReportCard ----------------------------------------------------------- */
-
 .report-card {
-  margin: 8px 0;
-  padding: 16px 18px;
+  padding: 16px 18px 18px;
   background: var(--surface);
   border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
 
 .report-card__header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.report-card__eyebrow {
+  margin: 0 0 2px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .report-card__title {
   margin: 0;
-  font-size: 17px;
-  color: var(--orange);
+  font-size: 18px;
+  line-height: 1.25;
+  color: var(--text);
 }
 
 .report-card__copy {
-  padding: 6px 14px;
+  flex: 0 0 auto;
+  padding: 7px 13px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--surface-2);
   color: var(--text);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .report-card__copy:hover {
-  background: #3a3a46;
+  background: var(--surface-hover);
 }
 
 .report-card__sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
   margin: 0;
 }
 
 .report-card__section {
-  padding: 10px 0;
+  min-width: 0;
+  padding-top: 10px;
   border-top: 1px solid var(--border);
 }
 
-.report-card__section:first-child {
-  border-top: none;
+.report-card__section:nth-child(n + 2) {
+  border-top-color: var(--border);
 }
 
 .report-card__label {
   font-size: 13px;
   font-weight: 700;
-  color: var(--cyan);
-  margin-bottom: 4px;
+  color: var(--accent);
+  margin-bottom: 5px;
 }
 
 .report-card__value {
@@ -322,8 +372,6 @@ button:disabled {
   color: var(--green);
 }
 
-/* ---- LoadingIndicator ----------------------------------------------------- */
-
 .loading-indicator {
   display: flex;
   align-items: center;
@@ -337,7 +385,7 @@ button:disabled {
   width: 16px;
   height: 16px;
   border: 2px solid var(--border);
-  border-top-color: var(--cyan);
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -348,14 +396,65 @@ button:disabled {
   }
 }
 
-/* ---- ConnectionErrorBanner ------------------------------------------------ */
-
 .connection-error-banner {
   padding: 10px 16px;
-  background: rgba(255, 128, 181, 0.14);
-  color: var(--pink);
-  border-bottom: 1px solid rgba(255, 128, 181, 0.35);
+  background: var(--error-banner-bg);
+  color: var(--danger);
+  border-bottom: 1px solid var(--error-banner-border);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 17px;
+  line-height: 1;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.theme-toggle:hover {
+  background: var(--surface-2);
+  border-color: var(--accent);
+}
+
+@media (max-width: 720px) {
+  .report-card__sections {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .room-list__items {
+    flex-direction: row;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .room-list__items > li {
+    flex: 0 0 min(230px, 76vw);
+  }
+
+  .room {
+    min-height: 62px;
+  }
+
+  .generate-button {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .generate-button button {
+    width: 100%;
+  }
 }

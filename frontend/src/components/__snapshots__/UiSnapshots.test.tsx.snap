@@ -19,6 +19,7 @@ exports[`Chat_UI snapshots > InputArea — active vs closed/disabled (Req 2.4, 6
     <textarea
       aria-label="메시지 입력"
       class="input-area__field"
+      placeholder="이번 주 업무를 입력하세요."
       rows="2"
     />
     <button
@@ -40,6 +41,7 @@ exports[`Chat_UI snapshots > InputArea — active vs closed/disabled (Req 2.4, 6
       aria-label="메시지 입력"
       class="input-area__field"
       disabled=""
+      placeholder="완료된 주간보고입니다."
       rows="2"
     />
     <button
@@ -175,11 +177,18 @@ exports[`Chat_UI snapshots > ReportCard — four sections and copy button (Req 5
     <header
       class="report-card__header"
     >
-      <h2
-        class="report-card__title"
-      >
-        주간보고
-      </h2>
+      <div>
+        <p
+          class="report-card__eyebrow"
+        >
+          생성된 결과
+        </p>
+        <h2
+          class="report-card__title"
+        >
+          주간보고
+        </h2>
+      </div>
       <button
         class="report-card__copy"
         type="button"

@@ -1,15 +1,4 @@
-/*
- * AppShell layout.
- *
- * A sidebar beside a flexible main chat area, built with flexbox so the layout
- * adapts to the Application_Window size (Req 2.6). Widths use flex/%, not fixed
- * pixels, and on a narrow window the sidebar and main area stack vertically.
- * No JS resize listener is needed — CSS handles the reflow.
- *
- * Colors/typography come from the global theme (index.css).
- */
-
-.app-shell {
+﻿.app-shell {
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -23,22 +12,31 @@
 }
 
 .app-shell__sidebar {
-  flex: 0 0 clamp(220px, 26%, 320px);
+  flex: 0 0 clamp(220px, 24%, 300px);
   display: flex;
   flex-direction: column;
   min-height: 0;
   overflow-y: auto;
   background: var(--sidebar-bg);
   border-right: 1px solid var(--border);
-  padding: 16px 12px;
+  padding: 14px 12px;
   box-sizing: border-box;
 }
 
-.app-shell__title {
-  font-size: 1.15rem;
-  font-weight: 700;
-  margin: 0 0 16px;
+.app-shell__sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
   padding: 0 4px;
+}
+
+.app-shell__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.25;
 }
 
 .app-shell__main {
@@ -51,21 +49,22 @@
   box-sizing: border-box;
 }
 
-/* MessageList takes the remaining vertical space and scrolls. */
 .app-shell__main .message-list {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  padding: 16px;
+  padding: 20px clamp(14px, 3vw, 28px);
 }
 
-/* The report card and generate action sit in a padded band above the input. */
 .app-shell__main .report-card {
-  margin: 0 16px 8px;
+  margin: 0 clamp(14px, 3vw, 28px) 12px;
 }
 
 .app-shell__actions {
   flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 clamp(10px, 2vw, 18px) 8px;
 }
 
 .app-shell__empty {
@@ -73,7 +72,6 @@
   padding: 24px;
 }
 
-/* Narrow window: stack sidebar above the chat area (Req 2.6). */
 @media (max-width: 640px) {
   .app-shell__body {
     flex-direction: column;
@@ -81,8 +79,26 @@
 
   .app-shell__sidebar {
     flex: 0 0 auto;
-    max-height: 32%;
+    overflow-y: hidden;
     border-right: none;
     border-bottom: 1px solid var(--border);
+    padding: 10px 10px 8px;
+  }
+
+  .app-shell__sidebar-header {
+    margin-bottom: 10px;
+  }
+
+  .app-shell__main .message-list {
+    padding: 14px 12px;
+  }
+
+  .app-shell__main .report-card {
+    margin: 0 12px 10px;
+  }
+
+  .app-shell__actions {
+    justify-content: stretch;
+    padding: 0 10px 8px;
   }
 }

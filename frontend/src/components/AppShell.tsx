@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import type { ChatRoom, Message } from "../types";
 import {
   ApiError,
@@ -15,30 +15,14 @@ import { GenerateButton } from "./GenerateButton";
 import { ReportCard } from "./ReportCard";
 import { LoadingIndicator } from "./LoadingIndicator";
 import { ConnectionErrorBanner } from "./ConnectionErrorBanner";
+import { ThemeToggle } from "./ThemeToggle";
 import "./AppShell.css";
 
-/**
- * AppShell is the top-level Chat_UI composition (design.md: AppShell).
- *
- * It owns the small amount of state the screen needs (rooms, the selected room,
- * that room's messages, and the loading / connection flags) and wires the leaf
- * components to the apiClient. State lives here — close to where it is used —
- * with plain useState/useEffect; no global store (per frontend steering).
- *
- * Layout: a sidebar (RoomList) beside a flexible main chat area. The layout is
- * responsive via CSS flexbox (see AppShell.css), so it adapts when the
- * Application_Window is resized (Req 2.6) without any JS resize listener.
- *
- * The apiClient is injectable: by default it talks to the in-memory mock
- * backend so the whole UI runs standalone (FE-only). The desktop integration
- * task swaps in a client pointed at the real loopback backend.
- */
 export interface AppShellProps {
   apiClient?: ApiClient;
 }
 
 export function AppShell({ apiClient }: AppShellProps) {
-  // Build the client once. Default to the mock backend so the UI runs FE-only.
   const [client] = useState<ApiClient>(
     () =>
       apiClient ??
@@ -59,9 +43,6 @@ export function AppShell({ apiClient }: AppShellProps) {
   const hasUserMessages = messages.some((m) => m.sender === "user");
 
   function handleError(error: unknown) {
-    // Only the "backend unreachable" case gets the connection banner (Req 10.9).
-    // Other structured errors are prevented by the UI (closed rooms disable
-    // input, empty messages are blocked) so they are not surfaced here.
     if (error instanceof ApiError && error.code === CONNECTION_ERROR) {
       setConnectionError(true);
     }
@@ -75,8 +56,6 @@ export function AppShell({ apiClient }: AppShellProps) {
     }
   }
 
-  // Initial load: fetch rooms, create one if none exist, then select the most
-  // recent active room and load its messages (Req 1.3, 1.4, 7.4).
   useEffect(() => {
     let cancelled = false;
 
@@ -132,9 +111,6 @@ export function AppShell({ apiClient }: AppShellProps) {
       const { closedRoomId } = await client.generateReport(selectedRoomId);
       const refreshed = await client.listRooms();
       setRooms(refreshed);
-      // Show the just-generated report by viewing the now-closed room
-      // (read-only, Req 5.4 / 6.5). The new active room appears in the sidebar
-      // list (Req 6.4) for the user to continue next week.
       setSelectedRoomId(closedRoomId);
       await loadMessages(closedRoomId);
     } catch (error) {
@@ -149,7 +125,10 @@ export function AppShell({ apiClient }: AppShellProps) {
       {connectionError && <ConnectionErrorBanner />}
       <div className="app-shell__body">
         <aside className="app-shell__sidebar">
-          <h1 className="app-shell__title">주간보고 채팅</h1>
+          <div className="app-shell__sidebar-header">
+            <h1 className="app-shell__title">주간보고 채팅</h1>
+            <ThemeToggle />
+          </div>
           <RoomList
             rooms={rooms}
             selectedRoomId={selectedRoomId}
@@ -193,10 +172,6 @@ export function AppShell({ apiClient }: AppShellProps) {
   );
 }
 
-/**
- * Picks the room to show by default: the most recent active room, falling back
- * to the most recent room overall if none are active (Req 7.4).
- */
 function pickDefaultRoom(rooms: ChatRoom[]): ChatRoom | null {
   const actives = rooms.filter((room) => room.status === "active");
   const pool = actives.length > 0 ? actives : rooms;
