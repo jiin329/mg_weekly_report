@@ -31,7 +31,9 @@ def db_path():
 @pytest.fixture
 def repo(db_path):
     """Create a fresh repository instance."""
-    return Repository(db_path)
+    r = Repository(db_path)
+    yield r
+    r.close()
 
 
 class TestRoomOperations:
@@ -142,13 +144,17 @@ class TestPersistence:
             content="Persistent",
             created_at="2024-01-05T10:00:00Z",
         )
+        repo1.close()
 
         # New instance — simulates restart
         repo2 = Repository(db_path)
-        rooms = repo2.list_rooms()
-        assert len(rooms) == 1
-        assert rooms[0]["id"] == room["id"]
+        try:
+            rooms = repo2.list_rooms()
+            assert len(rooms) == 1
+            assert rooms[0]["id"] == room["id"]
 
-        messages = repo2.get_messages(room["id"])
-        assert len(messages) == 1
-        assert messages[0]["content"] == "Persistent"
+            messages = repo2.get_messages(room["id"])
+            assert len(messages) == 1
+            assert messages[0]["content"] == "Persistent"
+        finally:
+            repo2.close()

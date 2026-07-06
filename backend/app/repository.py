@@ -28,6 +28,17 @@ class Repository:
         self._conn.execute("PRAGMA foreign_keys=ON")
         self._create_tables()
 
+    def close(self) -> None:
+        """Close the underlying SQLite connection.
+
+        Releases the file handle so the database file can be removed. This
+        matters on Windows, where an open connection keeps the file locked.
+        Safe to call multiple times.
+        """
+        if self._conn is not None:
+            self._conn.close()
+            self._conn = None
+
     def _create_tables(self) -> None:
         self._conn.executescript(
             """

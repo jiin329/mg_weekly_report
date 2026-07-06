@@ -34,7 +34,9 @@ def db_path():
 
 @pytest.fixture
 def repo(db_path):
-    return Repository(db_path)
+    r = Repository(db_path)
+    yield r
+    r.close()
 
 
 @pytest.fixture

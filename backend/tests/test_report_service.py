@@ -38,7 +38,9 @@ def db_path():
 
 @pytest.fixture
 def repo(db_path):
-    return Repository(db_path)
+    r = Repository(db_path)
+    yield r
+    r.close()
 
 
 def _make_room_with_message(repo: Repository, content: str = "이번 주 작업 완료") -> str:
