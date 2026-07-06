@@ -1,21 +1,16 @@
 import { useEffect, useState } from "react";
+import { ApiError, CONNECTION_ERROR, type ApiClient } from "../api/apiClient";
+import { createBackendApiClient } from "../api/backend";
 import type { ChatRoom, Message } from "../types";
-import {
-  ApiError,
-  CONNECTION_ERROR,
-  createApiClient,
-  type ApiClient,
-} from "../api/apiClient";
-import { createMockFetch } from "../mock/mockBackend";
-import { RoomList } from "./RoomList";
-import { MessageList } from "./MessageList";
-import { MessageBubble } from "./MessageBubble";
-import { InputArea } from "./InputArea";
-import { GenerateButton } from "./GenerateButton";
-import { ReportCard } from "./ReportCard";
-import { LoadingIndicator } from "./LoadingIndicator";
-import { ConnectionErrorBanner } from "./ConnectionErrorBanner";
 import "./AppShell.css";
+import { ConnectionErrorBanner } from "./ConnectionErrorBanner";
+import { GenerateButton } from "./GenerateButton";
+import { InputArea } from "./InputArea";
+import { LoadingIndicator } from "./LoadingIndicator";
+import { MessageBubble } from "./MessageBubble";
+import { MessageList } from "./MessageList";
+import { ReportCard } from "./ReportCard";
+import { RoomList } from "./RoomList";
 
 /**
  * AppShell is the top-level Chat_UI composition (design.md: AppShell).
@@ -29,23 +24,19 @@ import "./AppShell.css";
  * responsive via CSS flexbox (see AppShell.css), so it adapts when the
  * Application_Window is resized (Req 2.6) without any JS resize listener.
  *
- * The apiClient is injectable: by default it talks to the in-memory mock
- * backend so the whole UI runs standalone (FE-only). The desktop integration
- * task swaps in a client pointed at the real loopback backend.
+ * The apiClient is injectable: by default it talks to the REAL loopback backend
+ * over local HTTP (task 8.2, Req 10.3). Tests and FE-only development inject a
+ * client wired to the in-memory mock backend harness instead.
  */
 export interface AppShellProps {
   apiClient?: ApiClient;
 }
 
 export function AppShell({ apiClient }: AppShellProps) {
-  // Build the client once. Default to the mock backend so the UI runs FE-only.
+  // Build the client once. Default to the real loopback backend (Req 10.3);
+  // callers inject a mock-backed client for standalone/FE-only runs.
   const [client] = useState<ApiClient>(
-    () =>
-      apiClient ??
-      createApiClient({
-        baseUrl: "http://127.0.0.1:8000",
-        fetchFn: createMockFetch(),
-      }),
+    () => apiClient ?? createBackendApiClient(),
   );
 
   const [rooms, setRooms] = useState<ChatRoom[]>([]);

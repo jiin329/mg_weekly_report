@@ -188,7 +188,7 @@
 - [x] 5. [BE][FE] 체크포인트 — 트랙별 단독 검증
   - FE(mock 백엔드) 및 BE(stub LLM) 각 트랙의 모든 테스트가 통과하는지 확인한다. 의문점이 있으면 사용자에게 확인한다.
 
-- [ ] 6. [LLM] LLM 트랙 (합의된 인터페이스 뒤에서 독립 개발, FE·BE 진행에 비의존)
+- [x] 6. [LLM] LLM 트랙 (합의된 인터페이스 뒤에서 독립 개발, FE·BE 진행에 비의존)
   - [x] 6.1 [LLM] LLMClient 구현 (env 기반 API Key/Endpoint)
     - 환경 변수 기반 LLM API 연동 클라이언트, 인터페이스 경계(1.5) 준수
     - _Requirements: 9.1, 9.5_
@@ -205,7 +205,7 @@
     - LLM 미도달/오류 시 `LLM_UNAVAILABLE`, 응답 지연 시 `LLM_TIMEOUT`을 5초 내 산출
     - _Requirements: 9.4, 5.7_
     - _의존: 6.1_
-  - [ ] 6.5 [LLM] 프롬프트 구성 속성 테스트
+  - [ ]* 6.5 [LLM] 프롬프트 구성 속성 테스트
     - **Property 7: 생성 프롬프트는 방의 모든 메시지와 템플릿 지시를 포함한다**
     - **Validates: Requirements 4.3, 9.2**
     - Hypothesis, 최소 100회 반복
@@ -219,20 +219,37 @@
     - LLM 미도달/타임아웃/비정형 응답 등 오류 경로 예시 테스트
     - _Requirements: 5.7, 9.4_
     - _의존: 6.4_
+  - [x] 6.8 [LLM] 공유 generate 흐름 추출(리팩터링)
+    - `generate_report_via_prompt`로 프롬프트→호출→파싱→오류매핑 흐름을 공통화하여 provider A/B가 동일한 프롬프트/파싱/오류 처리를 공유
+    - _Requirements: 9.3, 9.4_
+    - _의존: 6.2, 6.3, 6.4_
+  - [x] 6.9 [LLM] Bedrock provider(option B) 구현
+    - `BedrockLLMClient`(`converse` API, boto3 지연 임포트, 실패 예산 5초) 구현, 타임아웃/오류를 `LLM_TIMEOUT`/`LLM_UNAVAILABLE`로 매핑
+    - _Requirements: 9.1, 9.4, 5.3, 5.7_
+    - _의존: 6.8_
+  - [x] 6.10 [LLM] provider 팩토리
+    - `build_llm_client()`가 `LLM_PROVIDER`로 `openai`/`bedrock`을 선택, 알 수 없는 값은 `CONFIG_MISSING`(`UnsupportedProviderError`)로 차단
+    - _Requirements: 9.5, 11.9_
+    - _의존: 6.1, 6.9_
+  - [ ]* 6.11 [LLM] Bedrock/팩토리 단위 테스트
+    - provider 선택, 필수 설정 누락(`BEDROCK_MODEL_ID`) 차단, 오류 경로 예시 테스트
+    - _Requirements: 9.4, 9.5, 11.9_
+    - _의존: 6.9, 6.10_
 
-- [ ] 7. [LLM] 체크포인트 — LLM 트랙 단독 검증
+- [x] 7. [LLM] 체크포인트 — LLM 트랙 단독 검증
   - LLM 트랙의 모든 테스트가 통과하는지 확인한다. 의문점이 있으면 사용자에게 확인한다.
 
 - [ ] 8. [INTEGRATION] 통합 및 패키징
-  - [ ] 8.1 [INTEGRATION] 실제 LLMClient를 BE ReportService에 연결
-    - stub LLM 클라이언트를 실제 LLMClient(LLM 트랙)로 교체, 원자적 보고서 생성 흐름이 실제 클라이언트로도 성립하는지 확인
+  - [x] 8.1 [INTEGRATION] 실제 LLMClient를 BE ReportService에 연결
+    - stub LLM 클라이언트를 `build_llm_client()`(팩토리, 6.10)로 교체하여 `StubLLMClient` 대신 `.env`에서 선택된 실제 provider를 배선, 원자적 보고서 생성 흐름이 실제 클라이언트로도 성립하는지 확인
+    - provider 선택은 `.env`만 바꾸는 변경이며(코드 변경 불필요), Bedrock provider는 `pip install -e ".[bedrock]"`로 boto3가 설치된 경우에만 필요
     - _Requirements: 5.1, 5.3, 9.1, 9.3, 9.4_
     - _의존: 4.7, 6.1, 6.2, 6.3, 6.4_
-  - [ ] 8.2 [INTEGRATION] FE를 실제 BE에 연결
+  - [x] 8.2 [INTEGRATION] FE를 실제 BE에 연결
     - mock 백엔드를 실제 루프백(`127.0.0.1:{PORT}`) BE로 전환, apiClient가 실제 응답/오류를 처리하도록 배선
     - _Requirements: 10.3, 10.9_
     - _의존: 3.1, 4.6_
-  - [ ] 8.3 [INTEGRATION] pywebview 데스크톱 셸 통합
+  - [x] 8.3 [INTEGRATION] pywebview 데스크톱 셸 통합
     - Python 진입점에서 env 검증 → FastAPI 백그라운드 스레드 기동 → 포트 바인딩 확인 → pywebview 창 생성 및 빌드된 React 자산 로드, 시작 실패(env 누락/포트 충돌) 시 셸 오류 창 표시
     - 앱 실행 시 Application_Window를 열고 Active_Chat_Room이 표시되는 구동 흐름 완성(초기 표시 시간 기준 포함)
     - _Requirements: 1.1, 10.1, 10.2, 10.6, 10.8, 11.6_
@@ -260,6 +277,7 @@
 - 속성 기반 테스트: Backend/LLM은 Python **Hypothesis**(최소 100회 반복), Frontend는 **fast-check** + React Testing Library를 사용한다.
 - **트랙 독립성**: 작업 1(파운데이션) 완료 후 `[FE]`, `[BE]`, `[LLM]` 트랙은 서로 의존하지 않는다. FE는 mock 백엔드, BE는 stub LLM 클라이언트에만 의존하며, 실제 연결은 `[INTEGRATION]` 단계에서 이루어진다.
 - 속성 번호(Property 1–13)는 design.md의 Correctness Properties와 일치한다: Property 1–4·6·9–13은 Backend, Property 5는 Frontend, Property 7–8은 LLM 트랙에서 검증한다.
+- **Pluggable LLM provider**: LLM 트랙은 공유 `LLMClient` 인터페이스 뒤에 두 provider를 지원한다 — option A `openai`(기본, `HttpLLMClient`)와 option B `bedrock`(`BedrockLLMClient`). `build_llm_client()` 팩토리가 `.env`의 `LLM_PROVIDER`로 provider를 선택하므로 provider 전환은 `.env`만 수정하는 변경이며 코드 변경이 필요 없다. Bedrock은 선택적 `[bedrock]` extra(`pip install -e ".[bedrock]"`)로 boto3가 설치된 경우에만 사용 가능하다. 통합 작업 8.1은 `StubLLMClient` 대신 `build_llm_client()`를 배선해야 한다.
 
 ## Task Dependency Graph
 

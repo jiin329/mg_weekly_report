@@ -1,6 +1,7 @@
 """Configuration loader for the weekly-report-chat backend.
 
 Responsibilities (task 4.1):
+- Load a project-root ``.env`` file into the process environment (load_env_file)
 - Load LLM_API_KEY, LLM_ENDPOINT, BACKEND_PORT from environment variables
 - Validate required vars at startup; halt with identifying error if missing
 - Provide runtime CONFIG_MISSING check for the report generation flow
@@ -9,6 +10,7 @@ Responsibilities (task 4.1):
 
 import json
 import os
+from pathlib import Path
 from typing import Optional
 
 from app.models import AppConfig
@@ -27,6 +29,103 @@ DEFAULT_BACKEND_PORT = 8756
 ENV_LLM_API_KEY = "LLM_API_KEY"
 ENV_LLM_ENDPOINT = "LLM_ENDPOINT"
 ENV_BACKEND_PORT = "BACKEND_PORT"
+
+# ---------------------------------------------------------------------------
+# LLM provider selection (option A: OpenAI-compatible / option B: AWS Bedrock)
+# ---------------------------------------------------------------------------
+# ``LLM_PROVIDER`` selects which concrete LLMClient the factory builds
+# (see ``app.llm_factory.build_llm_client``). It does not change the shared
+# ``LLMClient`` interface (task 1.5) — only how the connection is made.
+ENV_LLM_PROVIDER = "LLM_PROVIDER"
+
+# Provider values.
+PROVIDER_OPENAI = "openai"    # option A: OpenAI-compatible chat/completions
+PROVIDER_BEDROCK = "bedrock"  # option B: AWS Bedrock (converse API)
+DEFAULT_LLM_PROVIDER = PROVIDER_OPENAI
+
+# Optional model override for the OpenAI-compatible provider (option A).
+ENV_LLM_MODEL = "LLM_MODEL"
+
+# AWS Bedrock (option B) configuration.
+# - BEDROCK_MODEL_ID: required when LLM_PROVIDER=bedrock (e.g. an Anthropic
+#   Claude model id or an inference-profile ARN).
+# - AWS_REGION / AWS_DEFAULT_REGION: region for the bedrock-runtime client.
+# Credentials come from the standard AWS chain (env keys, shared profile, or a
+# Bedrock API key via AWS_BEARER_TOKEN_BEDROCK) — boto3 resolves them.
+ENV_BEDROCK_MODEL_ID = "BEDROCK_MODEL_ID"
+ENV_AWS_REGION = "AWS_REGION"
+ENV_AWS_DEFAULT_REGION = "AWS_DEFAULT_REGION"
+
+
+def resolve_provider() -> str:
+    """Return the configured LLM provider (lowercased), defaulting to OpenAI."""
+    return (
+        os.environ.get(ENV_LLM_PROVIDER, "").strip().lower() or DEFAULT_LLM_PROVIDER
+    )
+
+
+# ---------------------------------------------------------------------------
+# .env loading
+# ---------------------------------------------------------------------------
+
+# Project root = <root>/backend/app/config.py -> parents[2] == <root>.
+# The Desktop_App keeps its ``.env`` next to ``app.py`` at the project root
+# (see ``.env.example``).
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_ENV_FILE = PROJECT_ROOT / ".env"
+
+
+def load_env_file(path: Optional[str] = None, *, override: bool = False) -> bool:
+    """Load variables from a ``.env`` file into ``os.environ``.
+
+    This is the seam that lets configuration come from a ``.env`` file: it
+    populates the process environment so ``load_config`` (and the LLM provider
+    clients) can read the values via ``os.environ`` as they already do.
+
+    Call this once at process startup (the desktop shell / FastAPI entrypoint)
+    *before* ``load_config``. ``load_config`` itself intentionally does not call
+    this, so unit tests can drive it purely from a patched ``os.environ``.
+
+    Args:
+        path: Explicit ``.env`` path. Defaults to the project-root ``.env``.
+        override: When False (default), existing ``os.environ`` values win over
+            file values, so real environment variables and test patches are not
+            clobbered.
+
+    Returns:
+        True if a ``.env`` file was found and loaded, False otherwise.
+    """
+    env_path = Path(path) if path is not None else DEFAULT_ENV_FILE
+    if not env_path.is_file():
+        return False
+
+    try:
+        from dotenv import load_dotenv
+    except ImportError:  # pragma: no cover - python-dotenv is a runtime dep
+        return _load_env_file_fallback(env_path, override=override)
+
+    return load_dotenv(dotenv_path=str(env_path), override=override)
+
+
+def _load_env_file_fallback(env_path: Path, *, override: bool) -> bool:
+    """Minimal ``.env`` parser used only if python-dotenv is unavailable.
+
+    Supports ``KEY=VALUE`` lines, ignores blanks and ``#`` comments, and strips
+    surrounding single/double quotes. Does not handle multiline or interpolated
+    values (python-dotenv covers those when installed).
+    """
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if not key:
+            continue
+        if override or key not in os.environ:
+            os.environ[key] = value
+    return True
 
 
 # ---------------------------------------------------------------------------

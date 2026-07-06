@@ -39,7 +39,7 @@ import os
 import socket
 import urllib.error
 import urllib.request
-from typing import Optional, Protocol, runtime_checkable
+from typing import Callable, Optional, Protocol, runtime_checkable
 
 from app.config import ENV_LLM_API_KEY, ENV_LLM_ENDPOINT
 from app.error_codes import ErrorCode
@@ -53,6 +53,52 @@ from app.llm import (
 from app.llm_parsing import parse_report_response
 from app.llm_prompt import build_prompt
 from app.models import Message, WeeklyReport
+
+
+def generate_report_via_prompt(
+    invoke: Callable[[str, float], str],
+    messages: list[Message],
+    template: ReportTemplate,
+    *,
+    timeout: float,
+    failure_timeout: float,
+) -> WeeklyReport:
+    """Shared generate flow for every LLMClient provider.
+
+    Composes the prompt (task 6.2), calls ``invoke(prompt, timeout)`` to reach
+    the provider, and parses the raw response (task 6.3). Failures are mapped
+    onto the shared contract (Requirement 9.4):
+
+    - a timeout surfaces as ``LLMTimeoutError`` (``LLM_TIMEOUT``);
+    - any other failure (connection/HTTP/parse) surfaces as
+      ``LLMUnavailableError`` (``LLM_UNAVAILABLE``).
+
+    Each error carries the underlying cause in ``details`` so the message is
+    descriptive. Extracted so the OpenAI-compatible (``HttpLLMClient``) and AWS
+    Bedrock (``BedrockLLMClient``) providers share identical error taxonomy.
+    """
+    prompt = build_prompt(messages, template)
+    try:
+        raw = invoke(prompt, timeout)
+    except TimeoutError as exc:
+        raise LLMTimeoutError(
+            "LLM request timed out",
+            details={
+                "cause": str(exc),
+                "timeoutSeconds": timeout,
+                "failureBudgetSeconds": failure_timeout,
+            },
+        ) from exc
+    except LLMError:
+        # Already a structured LLM error (e.g. from a custom transport).
+        raise
+    except Exception as exc:  # noqa: BLE001 - map any failure to the contract
+        raise LLMUnavailableError(
+            "LLM API is unavailable or returned an error",
+            details={"cause": str(exc), "causeType": type(exc).__name__},
+        ) from exc
+
+    return parse_report_response(raw, template)
 
 # Default request timeout (seconds). Report generation is allowed up to 30s
 # end-to-end on the success path (Requirement 5.3).
@@ -255,32 +301,15 @@ class HttpLLMClient:
         descriptive. On failure the caller (ReportService) keeps the room Active
         with no partial state (Requirement 5.7).
         """
-        prompt = build_prompt(messages, template)
-        try:
-            raw = self._transport.send(
+        return generate_report_via_prompt(
+            lambda prompt, timeout: self._transport.send(
                 endpoint=self._endpoint,
                 api_key=self._api_key,
                 prompt=prompt,
-                timeout=self._timeout,
-            )
-        except TimeoutError as exc:
-            # Timeouts (incl. exceeding the failure budget) -> LLM_TIMEOUT.
-            raise LLMTimeoutError(
-                "LLM request timed out",
-                details={
-                    "cause": str(exc),
-                    "timeoutSeconds": self._timeout,
-                    "failureBudgetSeconds": self._failure_timeout,
-                },
-            ) from exc
-        except LLMError:
-            # Already a structured LLM error (e.g. from a custom transport).
-            raise
-        except Exception as exc:  # noqa: BLE001 - map any transport failure to the contract
-            # Connection refused / DNS / HTTP error / other -> LLM_UNAVAILABLE.
-            raise LLMUnavailableError(
-                "LLM API is unavailable or returned an error",
-                details={"cause": str(exc), "causeType": type(exc).__name__},
-            ) from exc
-
-        return parse_report_response(raw, template)
+                timeout=timeout,
+            ),
+            messages,
+            template,
+            timeout=self._timeout,
+            failure_timeout=self._failure_timeout,
+        )

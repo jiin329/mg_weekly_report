@@ -161,9 +161,43 @@ flowchart LR
 - **RoomService**: 채팅방 생성/조회/목록, 상태(Active↔Closed) 전이, 보고서 성공 시 신규 Active 방 자동 생성.
 - **MessageService**: 메시지 저장(시간순), 조회, 빈 메시지 방어.
 - **ReportService**: 메시지 취합 → Report_Template 프롬프트 구성 → LLM 호출 → 응답을 Weekly_Report 구조로 파싱.
-- **LLMClient**: 환경 변수(API Key/Endpoint) 기반 LLM API 연동. 타임아웃/오류 처리.
+- **LLMClient**: 공유 LLM 연동 인터페이스(task 1.5, 변경 없음). 방의 메시지와 `ReportTemplate`을 받아 `WeeklyReport`를 반환한다. 구체 구현은 provider별로 나뉘며(아래 "LLM Provider 선택" 참조) 타임아웃/오류 처리는 provider와 무관하게 동일하다.
 - **Repository**: 로컬 영속 저장소 접근 계층(방/메시지/보고서). 인메모리는 부적합 — 재시작 간 데이터 유지 및 Phase 2 설정 영속성(11.8) 필요. **구현: Python 표준 라이브러리 `sqlite3` 기반 단일 파일 DB(추가 의존성 없음).** 보고서 생성(방 Closed 전환 + 신규 Active 방 생성)은 단일 트랜잭션으로 원자적으로 커밋하여 Property 9를 보장한다. DB 파일 경로는 `config`에 두며 Phase 1은 프로젝트 로컬, Phase 2는 사용자 데이터 경로(예: `%APPDATA%`)를 사용한다.
 - **Config**: 환경 변수 로딩 및 검증. 누락 항목을 이름으로 식별.
+
+### LLM Provider 선택 (env 기반 교체 가능한 provider)
+
+LLM 연동은 **어떤 LLM에 어떻게 연결하는지**만 `.env`로 교체할 수 있도록 설계되었다. 공유 `LLMClient` 인터페이스(task 1.5)는 그대로 두고, 그 뒤에 provider별 구체 구현을 두는 **seam(이음매)** 을 도입한다. Provider 전환은 **`.env`만 수정하면 되는 변경**이며, 호출자(ReportService)나 다른 코드는 변경할 필요가 없다.
+
+**선택 방식 (`LLM_PROVIDER`)**: 팩토리 `build_llm_client()`(모듈 `app/llm_factory.py`)가 `LLM_PROVIDER` 값을 읽어 알맞은 구체 클라이언트를 반환한다. 값이 없으면 `openai`(option A)로 기본 동작한다.
+
+| provider (`LLM_PROVIDER`) | 구체 클라이언트 (모듈) | 연결 방식 | 필수/선택 설정 |
+|----------------------------|-------------------------|-----------|-----------------|
+| `openai` (option A, **기본값**) | `HttpLLMClient` (`app/llm_client.py`) | OpenAI 호환 `/chat/completions` 요청. `LLM_API_KEY`를 Bearer 토큰으로 `LLM_ENDPOINT`에 인증 | 필수: `LLM_API_KEY`, `LLM_ENDPOINT` (비어있으면 안 됨) / 선택: `LLM_MODEL`(모델명 override, 기본 `gpt-4o-mini`) |
+| `bedrock` (option B) | `BedrockLLMClient` (`app/llm_bedrock.py`) | Amazon Bedrock `bedrock-runtime`의 `converse` API 호출 | 필수: `BEDROCK_MODEL_ID` / 선택: `AWS_REGION` 또는 `AWS_DEFAULT_REGION`. 자격 증명은 boto3 표준 체인(정적 키, 명명된 프로파일, 또는 `AWS_BEARER_TOKEN_BEDROCK`의 Bedrock API 키)으로 해석 |
+
+```mermaid
+flowchart LR
+    Report["ReportService"] -->|"LLMClient (task 1.5)"| Factory
+    Factory["build_llm_client()<br/>(app/llm_factory.py)<br/>reads LLM_PROVIDER"]
+    Factory -->|"openai (기본)"| Http["HttpLLMClient<br/>(app/llm_client.py)"]
+    Factory -->|"bedrock"| Bedrock["BedrockLLMClient<br/>(app/llm_bedrock.py)"]
+    Http -->|"generate_report_via_prompt"| Shared["공유 generate 흐름<br/>프롬프트 구성 · 응답 파싱 · 오류 분류"]
+    Bedrock -->|"generate_report_via_prompt"| Shared
+    Http -->|"Bearer LLM_API_KEY"| OpenAI["OpenAI 호환 /chat/completions"]
+    Bedrock -->|"boto3 자격 증명 체인"| BR["Amazon Bedrock converse API"]
+```
+
+**공유 generate 흐름 (provider 간 동일 동작)**: 두 클라이언트 모두 공유 흐름 `generate_report_via_prompt`(모듈 `app/llm_client.py`)를 재사용한다. 따라서 **프롬프트 구성, 응답 파싱, 오류 분류(taxonomy)가 provider와 무관하게 동일하다**:
+
+- 타임아웃 → `LLM_TIMEOUT`
+- 그 외 모든 실패(연결/HTTP/파싱 등) → `LLM_UNAVAILABLE`
+- 필수 provider 설정 누락 → `CONFIG_MISSING` (`LLMConfigError`가 운반; option A는 `LLM_API_KEY`/`LLM_ENDPOINT`, option B는 `BEDROCK_MODEL_ID`)
+- 알 수 없는 `LLM_PROVIDER` 값 → `UnsupportedProviderError`(역시 `CONFIG_MISSING`)
+
+**실패 경로 5초 예산(Requirement 9.4)은 두 provider 모두에 동일하게 적용된다.** HTTP 클라이언트는 transport에 넘기는 대기 시간을 실패 예산으로 상한(cap)하고, Bedrock 클라이언트는 botocore 클라이언트의 read/connect 타임아웃을 실패 예산으로 설정하고 재시도를 비활성화한 뒤 botocore 타임아웃을 `TimeoutError`로 정규화하여 도달 불가/느린 엔드포인트가 ~5초 내에 서술적 오류를 표면화하도록 한다.
+
+**boto3는 선택적(optional) 의존성**이다. option B(Bedrock)에서만 필요하며 `pip install -e ".[bedrock]"` 로 설치한다. option A(OpenAI) 환경은 boto3가 필요 없으며, `BedrockLLMClient`는 boto3를 **지연 임포트(lazy import)** 하여 provider A 사용자에게 부담을 주지 않는다.
 
 ### REST API 인터페이스
 
@@ -253,14 +287,27 @@ interface ErrorResponse {
 
 ```typescript
 interface AppConfig {
-  llmApiKey: string;    // 환경 변수 LLM_API_KEY
-  llmEndpoint: string;  // 환경 변수 LLM_ENDPOINT
+  llmApiKey: string;    // 환경 변수 LLM_API_KEY (option A 필수)
+  llmEndpoint: string;  // 환경 변수 LLM_ENDPOINT (option A 필수)
   backendPort: number;  // 환경 변수 BACKEND_PORT (기본값 제공)
 }
 ```
 
+`AppConfig`는 provider A(OpenAI 호환)의 필수 연결 설정과 공용 백엔드 포트를 담는다. Provider 선택 및 provider별 부가 설정은 아래 표의 환경 변수로 제어하며, **provider 전환은 `.env`만 수정하면 되는 변경으로 코드 변경이 필요 없다**. option A의 기존 필수 설정 검증(`LLM_API_KEY`/`LLM_ENDPOINT` 비어있지 않음)은 변경되지 않는다.
+
+| 환경 변수 | 적용 provider | 필수/선택 | 설명 / 기본값 |
+|-----------|----------------|-----------|----------------|
+| `LLM_PROVIDER` | 공통 | 선택 | provider 선택(`openai` 또는 `bedrock`). 미설정 시 `openai`(option A) |
+| `LLM_API_KEY` | `openai` | 필수 | Bearer 토큰으로 전송. 비어있으면 시작 차단(10.6, 11.9) |
+| `LLM_ENDPOINT` | `openai` | 필수 | OpenAI 호환 base URL. 비어있으면 시작 차단(10.6, 11.9) |
+| `LLM_MODEL` | `openai` | 선택 | 모델명 override. 기본 `gpt-4o-mini` |
+| `BEDROCK_MODEL_ID` | `bedrock` | 필수 | Bedrock 모델 id 또는 inference-profile ARN. 없으면 `CONFIG_MISSING`으로 실패 |
+| `AWS_REGION` / `AWS_DEFAULT_REGION` | `bedrock` | 선택 | `bedrock-runtime` 클라이언트 리전(boto3가 공유 AWS 설정에서 읽을 수도 있음) |
+| `BACKEND_PORT` | 공통 | 선택 | 로컬 루프백 포트. 기본 `8756` |
+
 불변식:
-- `llmApiKey`와 `llmEndpoint`는 비어있지 않아야 하며, 비어있으면 시작 오류를 발생시킨다(10.6, 11.9).
+- provider가 `openai`(option A, 기본)일 때 `llmApiKey`와 `llmEndpoint`는 비어있지 않아야 하며, 비어있으면 시작 오류를 발생시킨다(10.6, 11.9). 이 검증은 provider 추가 이후에도 변경되지 않는다.
+- provider가 `bedrock`(option B)일 때 `BEDROCK_MODEL_ID`가 비어있으면 `CONFIG_MISSING`으로 즉시 실패한다.
 - Phase 2에서 설치 후 설정한 값은 재시작 간 영속된다(11.8).
 
 ---

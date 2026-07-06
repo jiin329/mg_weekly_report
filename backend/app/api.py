@@ -26,7 +26,7 @@ from typing import Any, Optional, Protocol
 from fastapi import APIRouter, Depends
 
 from .error_codes import ErrorCode
-from .llm import StubLLMClient
+from .llm_factory import LazyLLMClient
 from .message_service import MessageService, MessageServiceError
 from .report_service import ReportService, ReportServiceError
 from .repository import Repository
@@ -107,12 +107,15 @@ def get_report_service(
     """Provide a ReportService (task 4.7) bound to the active Repository.
 
     Report generation (message aggregation -> LLM -> WeeklyReport -> atomic room
-    close + new room) runs against the shared ``StubLLMClient`` (task 1.5), so
-    the BE track stays independent of the real LLM track. The real ``LLMClient``
-    is swapped in at integration (task 8.1). Tests may still override this
-    provider to inject a fake service or configure the stub for error paths.
+    close + new room) runs against the real, ``.env``-selected ``LLMClient``
+    resolved by ``build_llm_client()`` (integration task 8.1). The client is
+    wrapped in ``LazyLLMClient`` so the provider is built only on the first
+    generation call: this keeps non-LLM paths (e.g. an invalid room id) working
+    without provider configuration, and surfaces a misconfigured environment as
+    a structured ``CONFIG_MISSING`` error at generation time. Tests override this
+    provider (or inject ``LazyLLMClient(factory=...)``) to use a stub instead.
     """
-    return ReportService(repo, StubLLMClient())
+    return ReportService(repo, LazyLLMClient())
 
 
 # ---------------------------------------------------------------------------
