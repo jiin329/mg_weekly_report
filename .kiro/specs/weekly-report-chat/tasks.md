@@ -99,32 +99,32 @@
     - _의존: 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9_
 
 - [ ] 4. [BE] Backend 트랙 (stub LLM 클라이언트 대상 개발, FE·LLM 진행에 비의존)
-  - [ ] 4.1 [BE] Config 로딩 및 환경 변수 검증 구현
+  - [x] 4.1 [BE] Config 로딩 및 환경 변수 검증 구현
     - `LLM_API_KEY`, `LLM_ENDPOINT`, `BACKEND_PORT` 로딩 및 검증, 누락 항목을 이름으로 식별하는 시작 오류, 실행 중 `CONFIG_MISSING` 처리
     - 설정값 영속 저장/재로딩(Phase 2 대비) 계층 구현
     - _Requirements: 9.5, 10.6, 11.8, 11.9_
     - _의존: 1.1, 1.2 / FE·LLM 트랙에 비의존_
-  - [ ] 4.2 [BE] Repository(로컬 영속 저장소) 구현
+  - [x] 4.2 [BE] Repository(로컬 영속 저장소) 구현
     - 방/메시지/보고서 영속 저장·조회 계층, 재시작 간 데이터 유지 (인메모리 부적합)
     - _Requirements: 3.4, 8.4_
     - _의존: 1.2_
-  - [ ] 4.3 [BE] Pydantic 데이터 모델 및 불변식 구현
+  - [x] 4.3 [BE] Pydantic 데이터 모델 및 불변식 구현
     - `ChatRoom`, `Message`, `WeeklyReport`, `ErrorResponse` 모델과 불변식(status↔report/closedAt, user 메시지 공백 불가) 구현
     - _Requirements: 1.3, 3.3, 5.2_
     - _의존: 1.2_
-  - [ ] 4.4 [BE] RoomService(라이프사이클) 구현
+  - [x] 4.4 [BE] RoomService(라이프사이클) 구현
     - 방 생성/조회/목록, Active↔Closed 전이, 보고서 성공 시 원자적으로 Closed 전환 + 신규 Active 방 생성, active 방 최대 1개 불변식 유지
     - _Requirements: 1.3, 6.1, 6.3, 7.1, 8.2, 8.6_
     - _의존: 4.2, 4.3_
-  - [ ] 4.5 [BE] MessageService 구현
+  - [x] 4.5 [BE] MessageService 구현
     - 메시지 시간순 저장·조회, 공백 전용 메시지 방어, Closed 방 메시지 거부
     - _Requirements: 3.1, 3.2, 3.4, 3.5, 6.6_
     - _의존: 4.2, 4.3_
-  - [ ] 4.6 [BE] FastAPI 라우터·엔드포인트 및 구조화 오류 핸들링 구현
+  - [x] 4.6 [BE] FastAPI 라우터·엔드포인트 및 구조화 오류 핸들링 구현
     - 계약(1.3)의 5개 엔드포인트 구현, 유효하지 않은 roomId 및 내부 오류를 오류 카탈로그(1.4)에 따라 구조화 응답으로 반환
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 6.6_
     - _의존: 4.4, 4.5_
-  - [ ] 4.7 [BE] ReportService를 stub LLM 클라이언트로 연결
+  - [x] 4.7 [BE] ReportService를 stub LLM 클라이언트로 연결
     - 방 메시지 취합 → LLM 인터페이스(1.5) 호출 → 응답을 `WeeklyReport`로 수용하는 보고서 생성 흐름 구현, 메시지 없는 방 차단(`NO_MESSAGES`), 실패 시 방 Active 유지(부분 전이 없음)
     - stub LLM 클라이언트(1.5)를 사용하여 실제 LLM 트랙에 비의존
     - _Requirements: 4.2, 4.3, 5.3, 5.7, 6.1, 9.4_
