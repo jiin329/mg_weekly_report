@@ -1,2 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.hypothesis/
+*.egg-info/
+build/
+dist/
+
+# Environment files
 .env
 .env.local
+
+# Node
+node_modules/
+dist/
