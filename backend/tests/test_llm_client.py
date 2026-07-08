@@ -213,35 +213,38 @@ def test_default_failure_budget_is_five_seconds():
     assert DEFAULT_FAILURE_TIMEOUT_SECONDS == 5.0
 
 
-def test_client_passes_five_second_budget_to_transport(monkeypatch):
+def test_client_passes_success_budget_to_transport(monkeypatch):
     transport = _FakeTransport()
     _client(monkeypatch, transport).generate([_user_message()])
-    # By default the transport is given the 5s failure budget, so an
-    # unreachable/slow endpoint surfaces an error within ~5s (Req 9.4).
-    assert transport.calls[0]["timeout"] == 5.0
+    # The transport is given the full success-path budget (30s, Req 5.3) so a
+    # real report generation is not cut off. A dead endpoint still fails almost
+    # immediately regardless of this timeout (Req 9.4).
+    assert transport.calls[0]["timeout"] == 30.0
 
 
-def test_failure_budget_caps_a_larger_request_timeout(monkeypatch):
+def test_request_timeout_is_the_success_budget(monkeypatch):
     transport = _FakeTransport()
-    # Even if a caller asks for the full 30s success budget, the failure budget
-    # caps the wait passed to the transport so failures stay within ~5s.
+    # The wait passed to the transport is the caller's success budget, not the
+    # (smaller) failure budget — otherwise real generation would time out.
     _client(monkeypatch, transport, timeout_seconds=30.0).generate([_user_message()])
-    assert transport.calls[0]["timeout"] == 5.0
+    assert transport.calls[0]["timeout"] == 30.0
 
 
-def test_smaller_request_timeout_is_not_raised_by_the_budget(monkeypatch):
+def test_smaller_request_timeout_is_respected(monkeypatch):
     transport = _FakeTransport()
-    # A request timeout below the budget is respected (never inflated).
+    # An explicitly smaller request timeout is respected (never inflated).
     _client(monkeypatch, transport, timeout_seconds=2.0).generate([_user_message()])
     assert transport.calls[0]["timeout"] == 2.0
 
 
-def test_failure_budget_is_configurable(monkeypatch):
+def test_request_timeout_is_independent_of_failure_budget(monkeypatch):
     transport = _FakeTransport()
+    # The failure budget no longer caps the request timeout; the success budget
+    # is what reaches the transport.
     _client(
         monkeypatch, transport, timeout_seconds=30.0, failure_timeout_seconds=3.0
     ).generate([_user_message()])
-    assert transport.calls[0]["timeout"] == 3.0
+    assert transport.calls[0]["timeout"] == 30.0
 
 
 def test_socket_timeout_maps_to_llm_timeout_with_descriptive_error(monkeypatch):

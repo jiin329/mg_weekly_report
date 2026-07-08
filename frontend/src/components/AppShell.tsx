@@ -45,17 +45,25 @@ export function AppShell({ apiClient }: AppShellProps) {
   const [initialLoading, setInitialLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const selectedRoom = rooms.find((room) => room.id === selectedRoomId) ?? null;
   const hasUserMessages = messages.some((m) => m.sender === "user");
 
   function handleError(error: unknown) {
-    // Only the "backend unreachable" case gets the connection banner (Req 10.9).
-    // Other structured errors are prevented by the UI (closed rooms disable
-    // input, empty messages are blocked) so they are not surfaced here.
+    // The "backend unreachable" case gets the connection banner (Req 10.9).
     if (error instanceof ApiError && error.code === CONNECTION_ERROR) {
       setConnectionError(true);
+      return;
     }
+    // Every other structured error (e.g. LLM_UNAVAILABLE / LLM_TIMEOUT /
+    // CONFIG_MISSING during report generation) must be shown to the user;
+    // otherwise the action fails silently and nothing appears on screen.
+    if (error instanceof ApiError) {
+      setErrorMessage(error.message);
+      return;
+    }
+    setErrorMessage("요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.");
   }
 
   async function loadMessages(roomId: string) {
@@ -108,6 +116,7 @@ export function AppShell({ apiClient }: AppShellProps) {
 
   async function handleSend(content: string) {
     if (!selectedRoomId) return;
+    setErrorMessage(null);
     try {
       const message = await client.sendMessage(selectedRoomId, content);
       setMessages((prev) => [...prev, message]);
@@ -118,6 +127,7 @@ export function AppShell({ apiClient }: AppShellProps) {
 
   async function handleGenerate() {
     if (!selectedRoomId) return;
+    setErrorMessage(null);
     setGenerating(true);
     try {
       const { closedRoomId } = await client.generateReport(selectedRoomId);

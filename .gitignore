@@ -13,6 +13,11 @@ dist/
 .env
 .env.local
 
+# Local SQLite database (persistent store)
+*.db
+*.db-wal
+*.db-shm
+
 # Node
 node_modules/
 dist/

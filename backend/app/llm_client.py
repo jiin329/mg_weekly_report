@@ -272,10 +272,13 @@ class HttpLLMClient:
 
         self._api_key = resolved_key.strip()
         self._endpoint = resolved_endpoint.strip()
-        # Cap the wait at the failure budget so a dead/slow endpoint surfaces an
-        # error within ~5s (Req 9.4), without ever inflating a smaller request
-        # timeout a caller explicitly asked for.
-        self._timeout = min(timeout_seconds, failure_timeout_seconds)
+        # Use the success-path budget for the actual request so a real report
+        # generation (which can legitimately take up to ~30s, Req 5.3) is not cut
+        # off. A dead endpoint (connection refused / DNS failure) still fails
+        # almost immediately regardless of this timeout; only a silently hung
+        # socket waits the full budget. Never inflate a smaller timeout a caller
+        # explicitly asked for.
+        self._timeout = timeout_seconds
         self._failure_timeout = failure_timeout_seconds
         self._transport: LLMTransport = transport or UrllibTransport(model)
 

@@ -363,6 +363,9 @@ def bootstrap(
         load = load_config
 
     try:
+        from app.config import load_env_file
+
+        load_env_file()  # .env를 os.environ으로 로드
         validate()
         config = load()
         handle = start(config)

@@ -30,6 +30,11 @@ ENV_LLM_API_KEY = "LLM_API_KEY"
 ENV_LLM_ENDPOINT = "LLM_ENDPOINT"
 ENV_BACKEND_PORT = "BACKEND_PORT"
 
+# Persistent storage location. OPTIONAL; defaults to a project-root SQLite file.
+# Phase 2 can point this at %APPDATA% (or equivalent) via the environment.
+ENV_DB_PATH = "DB_PATH"
+DEFAULT_DB_FILENAME = "weekly_report.db"
+
 # ---------------------------------------------------------------------------
 # LLM provider selection (option A: OpenAI-compatible / option B: AWS Bedrock)
 # ---------------------------------------------------------------------------
@@ -126,6 +131,24 @@ def _load_env_file_fallback(env_path: Path, *, override: bool) -> bool:
         if override or key not in os.environ:
             os.environ[key] = value
     return True
+
+
+# ---------------------------------------------------------------------------
+# Persistent storage path
+# ---------------------------------------------------------------------------
+
+
+def resolve_db_path() -> str:
+    """Resolve the SQLite database path from ``DB_PATH`` (default provided).
+
+    Defaults to ``<project root>/weekly_report.db`` so data persists across
+    restarts (Requirements 3.4, 8.4). Override via ``DB_PATH`` (e.g. to place
+    the file under ``%APPDATA%`` for a packaged Phase 2 install).
+    """
+    raw = os.environ.get(ENV_DB_PATH, "").strip()
+    if raw:
+        return raw
+    return str(PROJECT_ROOT / DEFAULT_DB_FILENAME)
 
 
 # ---------------------------------------------------------------------------

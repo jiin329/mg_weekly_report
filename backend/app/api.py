@@ -25,6 +25,7 @@ from typing import Any, Optional, Protocol
 
 from fastapi import APIRouter, Depends
 
+from .config import resolve_db_path
 from .error_codes import ErrorCode
 from .llm_factory import LazyLLMClient
 from .message_service import MessageService, MessageServiceError
@@ -75,12 +76,19 @@ def configure_repository(repo: Repository) -> None:
 
 
 def get_repository() -> Repository:
-    """Provide the Repository. Overridden in tests / configured at startup."""
+    """Provide the Repository, lazily creating the default one on first use.
+
+    Tests override this via ``app.dependency_overrides`` (so they never touch
+    the on-disk default), and the desktop shell / startup may call
+    ``configure_repository`` explicitly. When neither has run — e.g. a plain
+    ``uvicorn app.main:app`` or ``python app.py`` launch — the first request
+    lazily opens the persistent SQLite database at the configured ``DB_PATH``
+    (defaults to a project-root file). This is what makes ``GET /rooms`` work on
+    a real local run instead of failing with an uninitialised-store error.
+    """
+    global _default_repository
     if _default_repository is None:
-        raise APIError(
-            ErrorCode.INTERNAL_ERROR,
-            "저장소가 초기화되지 않았습니다.",
-        )
+        _default_repository = Repository(resolve_db_path())
     return _default_repository
 
 

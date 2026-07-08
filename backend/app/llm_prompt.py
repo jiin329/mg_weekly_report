@@ -61,6 +61,23 @@ def build_report_prompt(
             lines.append(f"- {content}")
     else:
         lines.append("- (작성된 내용 없음)")
+    lines.append("")
+
+    # Output-format instruction. The response parser (task 6.3) expects a single
+    # JSON object whose keys are exactly the template section keys; without this
+    # instruction the model returns prose and parsing fails (LLM_UNAVAILABLE).
+    lines.append("## 출력 형식")
+    lines.append(
+        "반드시 아래 키를 가진 JSON 객체 하나만 출력하세요. 마크다운 코드펜스나 "
+        "다른 설명 없이 순수 JSON만 반환합니다. 모든 값은 비어 있지 않은 문자열이어야 합니다."
+    )
+    lines.append("{")
+    last = len(template.sections) - 1
+    for i, key in enumerate(template.sections):
+        label = template.section_labels.get(key, key)
+        comma = "," if i < last else ""
+        lines.append(f'  "{key}": "{label} 내용"{comma}')
+    lines.append("}")
 
     return "\n".join(lines)
 
